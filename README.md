@@ -161,6 +161,7 @@ API keys, OAuth credentials, service account tokens, and webhook IDs are sanitiz
 ## Author
 
 **Faiziya Khan**
+
 AI Automation Engineer | n8n | AI Agents | RAG | Workflow Automation
 
-📧 Email: khanfaiziya2@gmail.com
+Email: khanfaiziya2@gmail.com
