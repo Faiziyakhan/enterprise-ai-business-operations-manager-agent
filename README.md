@@ -120,29 +120,23 @@ The system assigns an operational tracking execution ID (`request_id`) and times
 
 ## Evidence & Verified Visual Proof
 
-This repository contains verified captures from the active self-hosted n8n environment and live CRM synchronization.
+This repository contains verified captures from the active self-hosted n8n environment and live CRM synchronization:
 
 ### 1. Multi-Agent Workflow Canvas & Architecture
-
-**Full Workflow Canvas (49 Nodes)**
-
-![Full Workflow Canvas](./screenshots/workflow-canvas.png)
-
-**End-to-End Orchestration Flow**
-
-![End-to-End Orchestration Flow](./screenshots/orchestration-flow.png)
+| Full Workflow Canvas (49 Nodes) | End-to-End Orchestration Flow |
+| :---: | :---: |
+| ![Full Workflow Canvas](Screenshot%202026-08-01%20221801.png) | ![End-to-End Orchestration Flow](Screenshot%202026-10-11%20222053.png) |
 
 ### 2. Multi-Agent Router & Parallel Execution Detail
-
-**Departmental AI Agent Stack Detail**
-
-![Departmental AI Agent Stack](./screenshots/agent-stack.png)
+| Departmental AI Agent Stack Detail |
+| :---: |
+| ![Departmental AI Agent Stack](Screenshot%202026-10-11%20222001.png) |
 
 ### 3. Google Sheets Multi-Department CRM Database
+| Centralized CRM Ledger & Human Decision Audit Log |
+| :---: |
+| ![CRM Ledger](Screenshot%202026-10-09%20234728.png) |
 
-**Centralized CRM Ledger & Human Decision Audit Log**
-
-![CRM Ledger](./screenshots/crm-ledger.png)
 
 ---
 
