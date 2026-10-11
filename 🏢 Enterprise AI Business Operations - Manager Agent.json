@@ -1,0 +1,2484 @@
+{
+  "name": "🏢 Enterprise AI Business Operations - Manager Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c06c5ce5-b933-41ca-a000-779154171508",
+              "name": "manager_prompt_input",
+              "value": "={{\n`Customer Information\n\nName: ${$json.customer_name}\nEmail: ${$json.customer_email}\nCompany: ${$json.customer_company}\n\nBusiness Request\n\nType: ${$json.request_type}\n\nMessage:\n${$json.request_message}\n\nPriority:\n${$json.priority}\n\nRequest ID:\n${$json.request_id}\n\nSource:\n${$json.source}\n\nReceived At:\n${$json.received_at}\n`\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        1584
+      ],
+      "id": "2ec8444e-508c-4709-b20b-c0f4a40ce2a3",
+      "name": "04 - Manager Input"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enterprise-business-operations",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        1584
+      ],
+      "id": "a60a6485-2e4c-4c60-b77e-688f85a46bb2",
+      "name": "01 - Webhook",
+      "webhookId": "2cacd6ca-7b6f-47da-a320-c57c4b137e82"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f54c44b-3412-4eaa-b242-7979e791f353",
+              "name": "request_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "351a670e-1c32-4405-beed-d674e9f35040",
+              "name": "received_at",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "0d04b093-283c-4f04-b8f4-ac30a5ee9f6e",
+              "name": "source",
+              "value": "Webhook",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        1584
+      ],
+      "id": "7bcc808e-20a6-4b94-a144-b77a0a3c7059",
+      "name": "02 - Normalize Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "773ae1ca-32ea-4c6e-a301-419af9af30ba",
+              "name": "customer_name",
+              "value": "={{ $json.body.customer.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a42e3888-c006-4e11-ab9e-0ea192293890",
+              "name": "customer_email",
+              "value": "={{ $json.body.customer.email }}",
+              "type": "string"
+            },
+            {
+              "id": "ea8956c9-0122-49f7-9536-4532f165a044",
+              "name": "customer_company",
+              "value": "={{ $json.body.customer.company }}",
+              "type": "string"
+            },
+            {
+              "id": "4b7ed759-9c2c-4bc2-8c9f-931e00c9a57d",
+              "name": "request_type",
+              "value": "={{ $json.body.request.type }}",
+              "type": "string"
+            },
+            {
+              "id": "08014520-644d-4a81-9884-0857e0fcd34e",
+              "name": "request_message",
+              "value": "={{ $json.body.request.message }}",
+              "type": "string"
+            },
+            {
+              "id": "1d568502-26d3-4951-b6d2-02454d43597c",
+              "name": "priority",
+              "value": "={{ $json.body.priority || \"Normal\" }}",
+              "type": "string"
+            },
+            {
+              "id": "bc7146cb-34d3-428c-aa21-9ec84c778542",
+              "name": "workflow_status",
+              "value": "Pending",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        1584
+      ],
+      "id": "33fa6500-5055-4f58-9da0-85cfdb43cc18",
+      "name": "03 - Build Enterprise Context"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Manager AI Agent of an Enterprise AI Business Operations System.\n\nYou are the Chief Operations Manager responsible for analyzing every incoming business request.\n\nCustomer Request:\n\n{{ $json.manager_prompt_input }}\n\nYour responsibilities:\n\n1. Understand the customer's request.\n2. Identify the primary business intent.\n3. Determine the business category.\n4. Decide the priority.\n5. Select one or more departments that should handle the request.\n6. Decide whether human approval is required.\n7. Provide a confidence score between 0 and 1.\n8. Explain your decision briefly.\n\nDepartment Rules\n\nSales\n- New inquiry\n- Proposal\n- Pricing\n- Business automation\n- CRM\n\nHR\n- Hiring\n- Recruitment\n- Interview\n- Resume\n- Employee onboarding\n\nFinance\n- Invoice\n- Budget\n- Payment\n- Financial reports\n\nCustomer Support\n- FAQ\n- Product issue\n- Technical issue\n- Complaint\n\nReporting\n- Reports\n- Executive summary\n- Analytics\n\nHuman Approval Rules\n\nReturn human_approval = true when:\n- confidence < 0.70\n- legal or financial risk exists\n- request is unclear\n- manual decision is required\n\nOtherwise return false.\n\nReturn ONLY valid JSON matching the required schema.\nDo not use markdown.\nDo not return any extra text.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        1584
+      ],
+      "id": "f1e56a87-9c8e-4b95-8554-495c0a851493",
+      "name": "05 - Manager AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"intent\": \"Business Automation Inquiry\",\n  \"category\": \"Sales\",\n  \"priority\": \"Normal\",\n  \"selected_agents\": [\n    \"Sales\"\n  ],\n  \"human_approval\": false,\n  \"confidence\": 0.95,\n  \"reasoning\": \"The customer is requesting business automation services and needs a proposal.\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        1808
+      ],
+      "id": "7d80b524-aa3b-4ecf-8af7-460e8b04239f",
+      "name": "07 - Manager Output Parser1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        2016
+      ],
+      "id": "b9ad05df-5356-4dcb-b2b4-f2c182967180",
+      "name": "06 - Manager Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d42f46d-b3bc-4077-875b-7489419a131d",
+              "name": "agent_list",
+              "value": "={{ $json.output.selected_agents }}",
+              "type": "array"
+            },
+            {
+              "id": "09d0da54-c0ad-4584-9b72-4651d834c6a0",
+              "name": "manager_intent",
+              "value": "={{ $json.output.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "a4f544f9-3e7a-4c80-8797-49cf906ace86",
+              "name": "manager_priority",
+              "value": "={{ $json.output.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "14198f7c-9074-4c66-a74b-56c6cf91c79d",
+              "name": "manager_confidence",
+              "value": "={{ $json.output.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "fd526f34-e7d1-42a5-b076-b8310b9f84ac",
+              "name": "manager_reasoning",
+              "value": "={{ $json.output.reasoning }}",
+              "type": "string"
+            },
+            {
+              "id": "de643340-3537-425f-a8c9-9c0612a599d1",
+              "name": "customer_name",
+              "value": "={{ $('04 - Manager Input').item.json.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "8bb9dc14-cd93-4b73-8511-876ce3a59f7f",
+              "name": "customer_email",
+              "value": "={{ $('04 - Manager Input').item.json.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "26b4de3e-1543-4fcf-8a35-b3e18ba5ec57",
+              "name": "manager_category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "15ed4aa5-b6d7-4a31-b238-7919e0056496",
+              "name": "customer_company",
+              "value": "={{ $('04 - Manager Input').item.json.customer_company }}",
+              "type": "string"
+            },
+            {
+              "id": "e90d1087-b48a-4a26-b0f1-08fdc7012be7",
+              "name": "request_type",
+              "value": "={{ $('04 - Manager Input').item.json.request_type }}",
+              "type": "string"
+            },
+            {
+              "id": "50fc35e3-cb2a-4e73-95a0-889f100bfbca",
+              "name": "request_message",
+              "value": "={{ $('04 - Manager Input').item.json.request_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        1584
+      ],
+      "id": "3566ebac-dc3d-4402-81c3-76437791d32c",
+      "name": "08 - Agent Router Context"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "agent_list",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        992,
+        1584
+      ],
+      "id": "7d582870-3a32-4690-b48b-bf232ca32766",
+      "name": "09 - Split Selected Agents"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.agent_list }}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bbd84c69-604d-42eb-84b8-e4dab4f4dc58"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sales"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "608f925a-24aa-4c97-aa6d-4ea5062104c7",
+                    "leftValue": "={{ $json.agent_list }}",
+                    "rightValue": "HR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ce4ba93b-76d6-46ba-9512-1746af3c1d3d",
+                    "leftValue": "={{ $json.agent_list }}",
+                    "rightValue": "Finance",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Finance"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "099ff3ef-156f-4e70-80a3-36480c0a19de",
+                    "leftValue": "={{ $json.agent_list }}",
+                    "rightValue": "Customer Support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Customer Support"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        1536
+      ],
+      "id": "3622501e-c02a-4e29-8ceb-7b58ad2e5921",
+      "name": "10 - Agent Router"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a587528c-8112-417f-8dd1-0d572ba59d8f",
+              "name": "sales_prompt_input",
+              "value": "=Customer Information\n\nName:\n{{ $json.customer_name }}\n\nEmail:\n{{ $json.customer_email }}\n\nCompany:\n{{ $json.customer_company }}\n\nBusiness Request\n\nType:\n{{ $json.request_type }}\n\nMessage:\n{{ $json.request_message }}\n\nManager Analysis\n\nIntent:\n{{ $json.manager_intent }}\n\nCategory:\n{{ $json.manager_category }}\n\nPriority:\n{{ $json.manager_priority }}\n\nConfidence:\n{{ $json.manager_confidence }}\n\nReasoning:\n{{ $json.manager_reasoning }}\n\nYour Role\n\nYou are the Sales AI Agent.\n\nAnalyze this business opportunity and prepare sales recommendations.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        992
+      ],
+      "id": "0ec43a4c-53a7-4810-a017-8f075e95488a",
+      "name": "11 - Sales Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Sales AI Agent of an Enterprise AI Business Operations System.\n\nYour role is to act as a Senior Enterprise Sales Consultant.\n\nYou are responsible for analyzing business opportunities and preparing professional sales recommendations based on the Manager AI analysis.\n\nBelow is the complete business context.\n\n{{ $json.sales_prompt_input }}\n\nYour responsibilities:\n\n1. Understand the customer's business requirements.\n2. Identify the customer's primary business goals.\n3. Identify the customer's pain points.\n4. Analyze the sales opportunity.\n5. Estimate the business opportunity level.\n6. Determine the customer's buying stage.\n7. Recommend the most suitable AI automation solution.\n8. Recommend the AI services that should be offered.\n9. Decide the next best sales action.\n10. Decide whether a sales meeting should be scheduled.\n11. Estimate the potential deal size.\n12. Assign the follow-up priority.\n13. Prepare a short professional sales summary.\n14. Briefly explain your reasoning.\n\nBusiness Opportunity Levels\n\n- High\n- Medium\n- Low\n\nBuying Stages\n\n- Awareness\n- Consideration\n- Decision\n\nNext Sales Actions\n\n- Send Proposal\n- Schedule Discovery Call\n- Schedule Product Demo\n- Follow Up\n- Request More Information\n\nDeal Size\n\n- Small\n- Medium\n- Large\n- Enterprise\n\nFollow-up Priority\n\n- High\n- Medium\n- Low\n\nMeeting Rules\n\nReturn schedule_meeting = true if:\n\n- The customer requests pricing.\n- The customer requests a proposal.\n- The customer requests implementation.\n- The customer requests a demo.\n- The business opportunity level is High.\n\nOtherwise return schedule_meeting = false.\n\nImportant Instructions\n\n- Return ONLY valid JSON.\n- The JSON must exactly match the connected Structured Output Parser.\n- Do not use Markdown.\n- Do not wrap the JSON inside code blocks.\n- Do not explain anything outside the JSON.\n- Ensure every required field is present in the response.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1664,
+        880
+      ],
+      "id": "2c3475e2-6d07-4461-847f-be9e123e5ae2",
+      "name": "12 - Sales AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        1104
+      ],
+      "id": "195721f5-eb3a-47a6-9f85-ede91dd237ab",
+      "name": "13 - Sales Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"sales_summary\": \"Customer wants AI automation proposal and pricing.\",\n  \"opportunity_level\": \"High\",\n  \"buying_stage\": \"Decision\",\n  \"recommended_solution\": \"Enterprise AI Automation Package\",\n  \"recommended_services\": [\n    \"HR Recruitment Automation\",\n    \"Customer Support AI Agent\"\n  ],\n  \"next_action\": \"Send Proposal\",\n  \"schedule_meeting\": true,\n  \"estimated_deal_size\": \"Medium\",\n  \"follow_up_priority\": \"High\",\n  \"reasoning\": \"Customer explicitly requested proposal and pricing for AI automation.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        1104
+      ],
+      "id": "88aec87b-7bba-489d-a239-5eca67b1f1df",
+      "name": "14 - Sales Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3233dbaa-cd36-426f-9137-65e79d5f4b8a",
+              "name": "sales_summary",
+              "value": "={{ $json.output.sales_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "49da3be3-1330-4b25-9eee-2143a0c27f4a",
+              "name": "opportunity_level",
+              "value": "={{ $json.output.opportunity_level }}",
+              "type": "string"
+            },
+            {
+              "id": "1286f480-2d66-4b8c-a38f-48dde3cd6262",
+              "name": "buying_stage",
+              "value": "={{ $json.output.buying_stage }}",
+              "type": "string"
+            },
+            {
+              "id": "1eb46f47-7909-4f4a-9c39-242d4758893d",
+              "name": "recommended_solution",
+              "value": "={{ $json.output.recommended_solution }}",
+              "type": "string"
+            },
+            {
+              "id": "bf07bf4a-4274-42be-934b-a9df6fa82f4f",
+              "name": "recommended_services",
+              "value": "={{ $json.output.recommended_services }}",
+              "type": "string"
+            },
+            {
+              "id": "8ccac9be-12f0-43d1-b387-485288ba3df5",
+              "name": "next_action",
+              "value": "={{ $json.output.next_action }}",
+              "type": "string"
+            },
+            {
+              "id": "32c9c018-787a-468a-beb7-2d5415882d08",
+              "name": "schedule_meeting",
+              "value": "={{ $json.output.schedule_meeting }}",
+              "type": "string"
+            },
+            {
+              "id": "f6c916ec-4a59-4990-ab3f-8093956c62f5",
+              "name": "estimated_deal_size",
+              "value": "={{ $json.output.estimated_deal_size }}",
+              "type": "string"
+            },
+            {
+              "id": "93c17e5c-4886-46d2-bcd7-d2fac64d1566",
+              "name": "follow_up_priority",
+              "value": "={{ $json.output.follow_up_priority }}",
+              "type": "string"
+            },
+            {
+              "id": "5ea744ae-dafd-4773-bd55-daf7b3aa9ebf",
+              "name": "sales_reasoning",
+              "value": "={{ $json.output.reasoning }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        992
+      ],
+      "id": "37bcf137-8551-4f9e-8ca1-c74858834ac0",
+      "name": "15 - Sales Context"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42b768e1-8244-4c69-be0b-5e1d1b602ec7",
+              "name": "hr_prompt_input",
+              "value": "==Customer Information\n\nName:\n{{ $json.customer_name }}\n\nEmail:\n{{ $json.customer_email }}\n\nCompany:\n{{ $json.customer_company }}\n\nBusiness Request\n\nType:\n{{ $json.request_type }}\n\nMessage:\n{{ $json.request_message }}\n\nManager Analysis\n\nIntent:\n{{ $json.manager_intent }}\n\nCategory:\n{{ $json.manager_category }}\n\nPriority:\n{{ $json.manager_priority }}\n\nConfidence:\n{{ $json.manager_confidence }}\n\nReasoning:\n{{ $json.manager_reasoning }}\n\nYour Role\n\nYou are the HR AI Agent.\n\nYour responsibility is to analyze the HR-related business requirements and recommend enterprise HR automation solutions.\n\nFocus on:\n\n• Recruitment Automation\n• Resume Screening\n• Interview Scheduling\n• Candidate Communication\n• Employee Onboarding\n• HR Knowledge Base\n• Employee Self-Service\n• Internal HR Workflow Automation\n\nPrepare recommendations from an HR department perspective.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        1792
+      ],
+      "id": "85b93b41-ed7a-4e69-9d24-6491265e7191",
+      "name": "16 - HR Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the HR AI Agent of an Enterprise AI Business Operations System.\n\nYour role is to act as a Senior HR Automation Consultant.\n\nYou are responsible for analyzing HR-related business requirements and recommending enterprise HR automation solutions.\n\nBelow is the complete business context.\n\n{{ $json.hr_prompt_input }}\n\nYour responsibilities:\n\n1. Understand the HR requirements.\n2. Identify HR pain points.\n3. Identify HR processes that can be automated.\n4. Recommend HR automation solutions.\n5. Recommend HR AI services.\n6. Estimate implementation complexity.\n7. Estimate business impact.\n8. Recommend implementation priority.\n9. Prepare a professional HR summary.\n10. Briefly explain your reasoning.\n\nImplementation Complexity\n\n- Low\n- Medium\n- High\n\nBusiness Impact\n\n- Low\n- Medium\n- High\n\nImplementation Priority\n\n- Low\n- Medium\n- High\n\nImportant Instructions\n\n- Return ONLY valid JSON.\n- The JSON must exactly match the connected Structured Output Parser.\n- Do not use Markdown.\n- Do not wrap the JSON inside code blocks.\n- Do not explain anything outside the JSON.\n- Ensure every required field is present in the response.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1664,
+        1680
+      ],
+      "id": "3912f1a1-4d64-402b-8b00-011fd980408c",
+      "name": "17 - HR AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        1904
+      ],
+      "id": "337c8f1c-63bf-42ee-8d59-f711a5d13ce4",
+      "name": "18 - HR Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"hr_summary\": \"The client wants to automate HR recruitment processes using AI.\",\n  \"identified_hr_processes\": [\n    \"Resume Screening\",\n    \"Candidate Ranking\",\n    \"Interview Scheduling\",\n    \"Employee Onboarding\"\n  ],\n  \"recommended_hr_solution\": \"Enterprise AI Recruitment Automation Platform\",\n  \"recommended_hr_services\": [\n    \"AI Resume Screening\",\n    \"Interview Scheduling Bot\",\n    \"Candidate Communication Automation\",\n    \"Employee Onboarding Assistant\"\n  ],\n  \"implementation_complexity\": \"Medium\",\n  \"business_impact\": \"High\",\n  \"implementation_priority\": \"High\",\n  \"reasoning\": \"The client wants to automate recruitment, making AI-driven hiring workflows the highest priority.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        1904
+      ],
+      "id": "ea7f3b7e-4128-4dc1-a324-89d89fc70885",
+      "name": "19 - HR Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63a0fd32-aeee-4fbd-8193-c6cc887fb2bf",
+              "name": "hr_summary",
+              "value": "={{ $json.output.hr_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "459c9d7f-b541-4722-957f-79e10f7d78ca",
+              "name": "identified_hr_processes",
+              "value": "={{ $json.output.identified_hr_processes }}",
+              "type": "string"
+            },
+            {
+              "id": "1384a7de-3f56-4127-8ef2-d2c11d714a16",
+              "name": "recommended_hr_solution",
+              "value": "={{ $json.output.recommended_hr_solution }}",
+              "type": "string"
+            },
+            {
+              "id": "01d51d30-f25d-4ca6-914f-28a94229709e",
+              "name": "recommended_hr_services",
+              "value": "={{ $json.output.recommended_hr_services }}",
+              "type": "string"
+            },
+            {
+              "id": "64cf9f14-29aa-43fd-83d9-da4d23b413e8",
+              "name": "implementation_complexity",
+              "value": "={{ $json.output.implementation_complexity }}",
+              "type": "string"
+            },
+            {
+              "id": "1ad0df90-7cc0-4bbe-b0cf-e0f543ba886a",
+              "name": "business_impact",
+              "value": "={{ $json.output.business_impact }}",
+              "type": "string"
+            },
+            {
+              "id": "07c04293-7f06-4848-8085-d1cebb95f365",
+              "name": "implementation_priority",
+              "value": "={{ $json.output.implementation_priority }}",
+              "type": "string"
+            },
+            {
+              "id": "09200168-4411-4823-b056-e1081168aeab",
+              "name": "hr_reasoning",
+              "value": "={{ $json.output.reasoning }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        1792
+      ],
+      "id": "587a3bdc-705a-48bc-b609-591e346ee51e",
+      "name": "20 - HR Context"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "610d793c-2eb5-4a6e-a597-ea96961becf9",
+              "name": "support_prompt_input",
+              "value": "==Customer Information\n\nName:\n{{ $json.customer_name }}\n\nEmail:\n{{ $json.customer_email }}\n\nCompany:\n{{ $json.customer_company }}\n\nBusiness Request\n\nType:\n{{ $json.request_type }}\n\nMessage:\n{{ $json.request_message }}\n\nManager Analysis\n\nIntent:\n{{ $json.manager_intent }}\n\nCategory:\n{{ $json.manager_category }}\n\nPriority:\n{{ $json.manager_priority }}\n\nConfidence:\n{{ $json.manager_confidence }}\n\nReasoning:\n{{ $json.manager_reasoning }}\n\nYour Role\n\nYou are the Customer Support AI Agent.\n\nYour responsibility is to analyze customer support requirements and recommend enterprise AI customer support solutions.\n\nFocus on:\n\n• AI Chatbots\n• Knowledge Base\n• FAQ Automation\n• Ticket Routing\n• Email Automation\n• Multi-channel Support\n• Sentiment Analysis\n• Live Agent Handoff\n• SLA Automation\n\nPrepare recommendations from a Customer Support perspective.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        2192
+      ],
+      "id": "55b8ed57-7757-46ba-bd37-960d7e400c50",
+      "name": "21 - Customer Support Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Customer Support AI Agent of an Enterprise AI Business Operations System.\n\nYour role is to act as a Senior Customer Support Automation Consultant.\n\nYou are responsible for analyzing customer support requirements and recommending enterprise AI customer support solutions.\n\nBelow is the complete business context.\n\n{{ $json.support_prompt_input }}\n\nYour responsibilities:\n\n1. Analyze the customer support requirements.\n2. Identify customer support pain points.\n3. Identify support processes that can be automated.\n4. Recommend AI customer support solutions.\n5. Recommend support automation services.\n6. Estimate implementation complexity.\n7. Estimate business impact.\n8. Recommend implementation priority.\n9. Prepare a professional customer support summary.\n10. Briefly explain your reasoning.\n\nImplementation Complexity\n\n- Low\n- Medium\n- High\n\nBusiness Impact\n\n- Low\n- Medium\n- High\n\nImplementation Priority\n\n- Low\n- Medium\n- High\n\nImportant Instructions\n\n- Return ONLY valid JSON.\n- The JSON must exactly match the connected Structured Output Parser.\n- Do not use Markdown.\n- Do not wrap the JSON inside code blocks.\n- Do not explain anything outside the JSON.\n- Ensure every required field is present in the response.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1664,
+        2192
+      ],
+      "id": "b000c17a-2983-45dc-81a5-65a098bb40b9",
+      "name": "22 - Customer Support AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        2416
+      ],
+      "id": "f923a4e6-7357-4b1e-aa31-a26bccc860b1",
+      "name": "23 - Customer Support Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"support_summary\": \"The client wants to automate customer support using AI.\",\n  \"identified_support_processes\": [\n    \"FAQ Automation\",\n    \"Ticket Classification\",\n    \"Customer Query Resolution\",\n    \"Live Agent Escalation\"\n  ],\n  \"recommended_support_solution\": \"Enterprise AI Customer Support Platform\",\n  \"recommended_support_services\": [\n    \"AI Chatbot\",\n    \"Knowledge Base\",\n    \"AI Ticket Routing\",\n    \"Sentiment Analysis\",\n    \"Email Automation\"\n  ],\n  \"implementation_complexity\": \"Medium\",\n  \"business_impact\": \"High\",\n  \"implementation_priority\": \"High\",\n  \"reasoning\": \"The client requires AI-powered customer support automation to improve response time and reduce operational workload.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        2416
+      ],
+      "id": "7579af12-dbb0-4358-8b60-0739d210fc07",
+      "name": "24 - Customer Support Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62d872b2-72b6-4f35-8b2e-4eb48ff75b8d",
+              "name": "support_summary",
+              "value": "={{ $json.output.support_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "c8624a26-2e8d-4624-b52e-90d305de6b94",
+              "name": "identified_support_processes",
+              "value": "={{ $json.output.identified_support_processes }}",
+              "type": "string"
+            },
+            {
+              "id": "d7795180-f444-46ab-8d52-5470da00726d",
+              "name": "recommended_support_solution",
+              "value": "={{ $json.output.recommended_support_solution }}",
+              "type": "string"
+            },
+            {
+              "id": "85a4bf44-44f4-4311-a97c-b2db04e24f56",
+              "name": "implementation_complexity",
+              "value": "={{ $json.output.implementation_complexity }}",
+              "type": "string"
+            },
+            {
+              "id": "d3133587-d1ec-4874-b478-c67ec747b630",
+              "name": "business_impact",
+              "value": "={{ $json.output.business_impact }}",
+              "type": "string"
+            },
+            {
+              "id": "601dc72a-1923-44ee-9549-eefa97a62d3c",
+              "name": "implementation_priority",
+              "value": "={{ $json.output.implementation_priority }}",
+              "type": "string"
+            },
+            {
+              "id": "e8266c9e-9dd5-481a-8946-eb955f8d2141",
+              "name": "support_reasoning",
+              "value": "={{ $json.output.reasoning }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        2192
+      ],
+      "id": "98d1d603-f10b-4a29-9264-a2681954ee9b",
+      "name": "25 - Customer Support Context"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eeea89d1-d67e-4b6d-967f-417b053b42ee",
+              "name": "finance_prompt_input",
+              "value": "==Customer Information\n\nName:\n{{ $json.customer_name }}\n\nEmail:\n{{ $json.customer_email }}\n\nCompany:\n{{ $json.customer_company }}\n\nBusiness Request\n\nType:\n{{ $json.request_type }}\n\nMessage:\n{{ $json.request_message }}\n\nManager Analysis\n\nIntent:\n{{ $json.manager_intent }}\n\nCategory:\n{{ $json.manager_category }}\n\nPriority:\n{{ $json.manager_priority }}\n\nConfidence:\n{{ $json.manager_confidence }}\n\nReasoning:\n{{ $json.manager_reasoning }}\n\nYour Role\n\nYou are the Finance AI Agent.\n\nYour responsibility is to analyze the financial aspects of the customer's request and prepare financial recommendations.\n\nFocus on:\n\n• Proposal Pricing\n• Budget Estimation\n• ROI Analysis\n• Cost Optimization\n• Subscription Plans\n• Implementation Cost\n• Operational Savings\n• Business Value\n• Financial Risk Assessment\n\nPrepare recommendations from the Finance department perspective.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        1392
+      ],
+      "id": "cd3abfec-c6b4-46d6-a13e-032b32475129",
+      "name": "26 - Finance Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Finance AI Agent of an Enterprise AI Business Operations System.\n\nYour role is to act as a Senior Financial Consultant specializing in AI automation projects.\n\nYou are responsible for evaluating the financial aspects of the customer's request and preparing professional financial recommendations.\n\nBelow is the complete business context.\n\n{{ $json.finance_prompt_input }}\n\nYour responsibilities:\n\n1. Analyze the customer's financial requirements.\n2. Estimate the potential project size.\n3. Identify budget considerations.\n4. Estimate implementation cost level.\n5. Estimate expected ROI.\n6. Identify expected operational cost savings.\n7. Recommend the most suitable pricing approach.\n8. Recommend implementation priority.\n9. Prepare a professional financial summary.\n10. Briefly explain your reasoning.\n\nProject Size\n\n- Small\n- Medium\n- Large\n- Enterprise\n\nBudget Level\n\n- Low\n- Medium\n- High\n- Enterprise\n\nImplementation Cost\n\n- Low\n- Medium\n- High\n\nExpected ROI\n\n- Low\n- Medium\n- High\n\nImplementation Priority\n\n- Low\n- Medium\n- High\n\nImportant Instructions\n\n- Return ONLY valid JSON.\n- The JSON must exactly match the connected Structured Output Parser.\n- Do not return Markdown.\n- Do not wrap JSON inside code blocks.\n- Ensure every required field is present.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1664,
+        1280
+      ],
+      "id": "ab8f19fd-c64f-4800-b7a9-2777f96cc008",
+      "name": "27 - Finance AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        1504
+      ],
+      "id": "4e8fe9ed-baa7-4e25-bbe8-d92fe10a39ea",
+      "name": "28 - Finance Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"finance_summary\": \"The client is requesting pricing and financial planning for AI automation.\",\n  \"project_size\": \"Enterprise\",\n  \"budget_level\": \"High\",\n  \"implementation_cost\": \"High\",\n  \"expected_roi\": \"High\",\n  \"estimated_operational_savings\": \"Significant reduction in operational costs through AI automation.\",\n  \"recommended_pricing_model\": \"Enterprise Fixed Project with Annual Support Contract\",\n  \"implementation_priority\": \"High\",\n  \"reasoning\": \"The client has a high-intent enterprise automation requirement covering multiple departments, making this a high-value implementation with strong ROI potential.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        1504
+      ],
+      "id": "432c67b6-8e40-48c2-b0a3-78b3c43cb7a4",
+      "name": "29 - Finance Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f035e4c4-e336-48be-9017-8540cedaf5e5",
+              "name": "finance_summary",
+              "value": "={{ $json.output.finance_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "aa29d9e0-ac4b-47b1-a42c-377f9d6161cf",
+              "name": "project_size",
+              "value": "={{ $json.output.project_size }}",
+              "type": "string"
+            },
+            {
+              "id": "d881cedf-36d2-4cab-abc0-fdb2ba7256bc",
+              "name": "budget_level",
+              "value": "={{ $json.output.budget_level }}",
+              "type": "string"
+            },
+            {
+              "id": "83107ca2-1d4e-44f1-83c5-63014b7b25ae",
+              "name": "implementation_cost",
+              "value": "={{ $json.output.implementation_cost }}",
+              "type": "string"
+            },
+            {
+              "id": "8833fa85-a817-435d-98fa-de2e038ff60e",
+              "name": "expected_roi",
+              "value": "={{ $json.output.expected_roi }}",
+              "type": "string"
+            },
+            {
+              "id": "274aec82-243f-4cd4-9ca0-17472deb734e",
+              "name": "estimated_operational_savings",
+              "value": "={{ $json.output.estimated_operational_savings }}",
+              "type": "string"
+            },
+            {
+              "id": "76295f27-b2ca-4f76-8241-8b99bec9e56d",
+              "name": "recommended_pricing_model",
+              "value": "={{ $json.output.recommended_pricing_model }}",
+              "type": "string"
+            },
+            {
+              "id": "d7cee0df-5386-41c3-bfdc-141dd6f8828b",
+              "name": "implementation_priority",
+              "value": "={{ $json.output.implementation_priority }}",
+              "type": "string"
+            },
+            {
+              "id": "ef8bc7e7-993a-43f9-b72b-ec3d1506acf6",
+              "name": "finance_reasoning",
+              "value": "={{ $json.output.reasoning }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        1392
+      ],
+      "id": "63497a46-3eec-4931-99a6-96abb7ade148",
+      "name": "30 - Finance Context"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2240,
+        1552
+      ],
+      "id": "259b91bb-f3ec-4421-876f-6876f3ce39f9",
+      "name": "31 - Merge Department Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = {};\n\nfor (const item of items) {\n\n  if (item.json.sales_summary) {\n    result.sales_summary = item.json.sales_summary;\n    result.opportunity_level = item.json.opportunity_level;\n    result.buying_stage = item.json.buying_stage;\n    result.recommended_solution = item.json.recommended_solution;\n  }\n\n  if (item.json.hr_summary) {\n    result.hr_summary = item.json.hr_summary;\n    result.recommended_hr_solution = item.json.recommended_hr_solution;\n  }\n\n  if (item.json.support_summary) {\n    result.support_summary = item.json.support_summary;\n    result.recommended_support_solution = item.json.recommended_support_solution;\n  }\n\n  if (item.json.finance_summary) {\n    result.finance_summary = item.json.finance_summary;\n    result.project_size = item.json.project_size;\n    result.expected_roi = item.json.expected_roi;\n  }\n\n}\n\nreturn [\n  {\n    json: result\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        1584
+      ],
+      "id": "fa2b6c63-a5b2-4142-be93-6d75b4fb1e45",
+      "name": "32 - Aggregate Results"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15dab86d-c8c3-4c45-8afb-e729cbcb1ef0",
+              "name": "reporting_prompt_input",
+              "value": "=Enterprise Department Reports\n\nSales Summary:\n{{ $json.sales_summary }}\n\nOpportunity Level:\n{{ $json.opportunity_level }}\n\nBuying Stage:\n{{ $json.buying_stage }}\n\nRecommended Sales Solution:\n{{ $json.recommended_solution }}\n\n-----------------------------------\n\nHR Summary:\n\n{{ $json.hr_summary }}\n\nRecommended HR Solution:\n\n{{ $json.recommended_hr_solution }}\n\n-----------------------------------\n\nCustomer Support Summary:\n\n{{ $json.support_summary }}\n\nRecommended Support Solution:\n\n{{ $json.recommended_support_solution }}\n\n-----------------------------------\n\nFinance Summary:\n\n{{ $json.finance_summary }}\n\nProject Size:\n\n{{ $json.project_size }}\n\nExpected ROI:\n\n{{ $json.expected_roi }}\n\n-----------------------------------\n\nTask\n\nYou are the Enterprise Reporting AI.\n\nAnalyze all department recommendations and prepare one executive business report.\n\nThe report should include:\n\n1. Executive Summary\n\n2. Sales Findings\n\n3. HR Findings\n\n4. Customer Support Findings\n\n5. Finance Findings\n\n6. Overall Business Opportunities\n\n7. Overall Business Risks\n\n8. Enterprise Implementation Roadmap\n\n9. Final Recommendation\n\n10. Executive Conclusion",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        1584
+      ],
+      "id": "2ec0c797-5838-4a59-8088-e2fe2aede6b3",
+      "name": "33 - Reporting Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Enterprise Reporting AI Agent.\n\nYour responsibility is to act as a Senior Business Strategy Consultant.\n\nBelow is the complete business analysis from every department.\n\n{{ $json.reporting_prompt_input }}\n\nYour job is to create one executive business report.\n\nThe report must include:\n\n1. Executive Summary\n\n2. Sales Department Findings\n\n3. HR Department Findings\n\n4. Customer Support Findings\n\n5. Finance Department Findings\n\n6. Business Opportunities\n\n7. Business Risks\n\n8. Recommended Implementation Roadmap\n\n9. Overall Business Recommendation\n\n10. Executive Conclusion\n\nReturn ONLY valid JSON.\n\nDo not write markdown.\n\nDo not write explanations outside JSON.\n\nThe JSON must exactly match the connected Output Parser.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2912,
+        1584
+      ],
+      "id": "7fcbea20-d39f-4927-9ecf-f40a7083782f",
+      "name": "34 - Reporting AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2912,
+        1808
+      ],
+      "id": "287ed88b-4afb-4a4d-9fc4-882e740fbda6",
+      "name": "35 - Reporting Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_summary\": \"ABC Corporation requires an enterprise-wide AI automation strategy covering multiple business departments.\",\n  \"sales_findings\": \"High-value enterprise sales opportunity with strong buying intent.\",\n  \"hr_findings\": \"AI recruitment automation can significantly reduce hiring effort.\",\n  \"support_findings\": \"AI-powered customer support can improve response times and reduce operational workload.\",\n  \"finance_findings\": \"Enterprise implementation has a high ROI despite a significant initial investment.\",\n  \"business_opportunities\": [\n    \"Enterprise AI Transformation\",\n    \"Operational Cost Reduction\",\n    \"Improved Customer Experience\",\n    \"Higher Employee Productivity\"\n  ],\n  \"business_risks\": [\n    \"Implementation Complexity\",\n    \"Integration Challenges\",\n    \"Change Management\"\n  ],\n  \"implementation_roadmap\": [\n    \"Discovery Phase\",\n    \"Solution Design\",\n    \"Pilot Deployment\",\n    \"Enterprise Rollout\"\n  ],\n  \"overall_recommendation\": \"Proceed with a phased enterprise AI implementation.\",\n  \"executive_conclusion\": \"This project represents a high-value enterprise AI transformation opportunity.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3040,
+        1808
+      ],
+      "id": "fb9f3f13-1caf-4023-9007-0ce7009c0033",
+      "name": "36 - Reporting Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "474d92f5-37d1-4cb8-89a3-30c818458257",
+              "name": "ceo_prompt_input",
+              "value": "=Enterprise Executive Report  Executive Summary  {{ $json.output.executive_summary }}  ----------------------------------------  Sales Findings  {{ $json.output.sales_findings }}  ----------------------------------------  HR Findings  {{ $json.output.hr_findings }}  ----------------------------------------  Customer Support Findings  {{ $json.output.support_findings }}  ----------------------------------------  Finance Findings  {{ $json.output.finance_findings }}  ----------------------------------------  Business Risks  {{ JSON.stringify($json.output.business_risks) }}  ----------------------------------------  Implementation Roadmap  {{ JSON.stringify($json.output.implementation_roadmap) }}  ----------------------------------------  Overall Recommendation  {{ $json.output.overall_recommendation }}  ----------------------------------------  Executive Conclusion  {{ $json.output.executive_conclusion }}  ==================================================  YOUR ROLE  You are the Chief Executive Officer (CEO).  Review the complete enterprise business report.  Make the final executive decision.  Decide whether this enterprise AI transformation should be:  - Approved - Approved with Conditions - Rejected  Also explain why.  Provide strategic recommendations for the executive board.  Return ONLY the final executive decision.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3264,
+        1584
+      ],
+      "id": "c3d1ebc1-a92a-4138-82d2-cf2b58b9feb4",
+      "name": "37 - CEO Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Chief Executive Officer (CEO) of an enterprise AI consulting company.\n\nBelow is the final executive report prepared by the Enterprise Reporting Team.\n\n{{ $json.ceo_prompt_input }}\n\nYour responsibility is to review the complete business opportunity from an executive perspective.\n\nEvaluate:\n\n• Overall business value\n• Strategic importance\n• Financial viability\n• Technical feasibility\n• Implementation risks\n• Expected ROI\n• Client priority\n• Resource allocation\n• Long-term business impact\n\nBased on this analysis, make the final executive decision.\n\nYour decision must be one of the following:\n\n1. Approved\n2. Approved with Conditions\n3. Rejected\n\nIf Approved with Conditions, clearly explain the required conditions.\n\nAlso provide:\n\n- Executive Decision\n- Decision Confidence (0–100)\n- Business Priority (Critical / High / Medium / Low)\n- Investment Recommendation\n- Strategic Recommendation\n- Executive Notes\n- Final CEO Conclusion\n\nReturn ONLY valid JSON.\n\nDo not write markdown.\n\nDo not explain outside JSON.\n\nThe JSON must exactly match the connected Output Parser.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3488,
+        1584
+      ],
+      "id": "06acee24-eff3-454b-9911-6fcb10e6d6d9",
+      "name": "38 - CEO AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        3488,
+        1808
+      ],
+      "id": "f19a5122-375f-4783-9241-660fb2a6dcc5",
+      "name": "39 - CEO Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YCQ64bTHZ12vMvKp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"executive_decision\": \"Approved\",\n  \"decision_confidence\": 98,\n  \"business_priority\": \"Critical\",\n  \"investment_recommendation\": \"Proceed with phased enterprise implementation.\",\n  \"strategic_recommendation\": \"Begin with Sales and Customer Support, followed by HR and Finance.\",\n  \"implementation_conditions\": [\n    \"Complete discovery workshop\",\n    \"Approve project budget\",\n    \"Assign executive sponsor\",\n    \"Define implementation milestones\"\n  ],\n  \"executive_notes\": \"This opportunity represents a high-value enterprise AI transformation with significant long-term ROI.\",\n  \"final_ceo_conclusion\": \"Approved for enterprise implementation using a phased rollout strategy.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3616,
+        1808
+      ],
+      "id": "4f91c4a3-449d-48a9-8116-4354c044b953",
+      "name": "40 - CEO Output Parser"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E",
+          "mode": "list",
+          "cachedResultName": "AI Lead CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 396801935,
+          "mode": "list",
+          "cachedResultName": "Sheet4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E/edit#gid=396801935"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Request ID": "={{ $('04 - Manager Input').item.json.request_id }}",
+            "Customer Name": "={{ $('04 - Manager Input').item.json.customer_name }}",
+            "Customer Email": "={{ $('04 - Manager Input').item.json.customer_email }}",
+            "Company": "={{ $('04 - Manager Input').item.json.customer_company }}",
+            "Request Type": "={{ $('04 - Manager Input').item.json.request_type }}",
+            "Manager Decision": "={{ $('08 - Agent Router Context').item.json.manager_category }}",
+            "Sales Summary": "={{ $('32 - Aggregate Results').item.json.sales_summary }}",
+            "HR Summary": "={{ $('32 - Aggregate Results').item.json.hr_summary }}",
+            "Support Summary": "={{ $('32 - Aggregate Results').item.json.support_summary }}",
+            "Finance Summary": "={{ $('32 - Aggregate Results').item.json.finance_summary }}",
+            "CEO Decision": "= {{ $json.output.executive_decision }}",
+            "Business Priority": "={{ $json.output.business_priority }}",
+            "Decision Confidence": "={{ $json.output.decision_confidence }}",
+            "Workflow Status": "Pending Human Approval",
+            "Created At": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Request ID",
+              "displayName": "Request ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Request Type",
+              "displayName": "Request Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Manager Decision",
+              "displayName": "Manager Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sales Summary",
+              "displayName": "Sales Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HR Summary",
+              "displayName": "HR Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Summary",
+              "displayName": "Support Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finance Summary",
+              "displayName": "Finance Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEO Decision",
+              "displayName": "CEO Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Business Priority",
+              "displayName": "Business Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decision Confidence",
+              "displayName": "Decision Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Status",
+              "displayName": "Workflow Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3840,
+        1584
+      ],
+      "id": "71bc42b5-726b-41ce-925a-70494797b138",
+      "name": "41 - CRM Logger",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "jPxT6sAWdI8lTXyL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "faiziyakhanwork@gmail.com",
+        "subject": "=🚨 AI Automation Approval Required | {{ $('04 - Manager Input').item.json.customer_company }}",
+        "message": "=<!DOCTYPE html>\n<html><head><meta charset=\"UTF-8\">\n<title>Manager Approval Email</title>\n<style>\nbody{font-family:Arial,sans-serif;background:#f4f6f9;margin:0}\n.container{max-width:900px;margin:20px auto;background:#fff;border-radius:10px;overflow:hidden}\n.header{background:#0f172a;color:#fff;padding:30px}\n.section{padding:25px}\n.card{background:#f8fafc;border:1px solid #ddd;border-radius:8px;padding:15px;margin-bottom:18px}\ntable{width:100%;border-collapse:collapse}\ntd{padding:10px;border-bottom:1px solid #eee}\n.label{font-weight:bold;width:220px}\n.badge{display:inline-block;background:#2563eb;color:#fff;padding:5px 10px;border-radius:16px}\n.btn{display:inline-block;padding:14px 28px;border-radius:8px;color:#fff;text-decoration:none;font-weight:bold;margin:8px}\n.green{background:#16a34a}.red{background:#dc2626}\n.footer{background:#0f172a;color:#fff;text-align:center;padding:25px}\n</style></head>\n<body>\n<div class=\"container\">\n<div class=\"header\">\n<h1>Enterprise AI Business Operating System</h1>\n<p>Manager Approval Required</p>\n</div>\n<div class=\"section\">\n<div class=\"card\">\n<h2>Customer Details</h2>\n<table>\n<tr><td class=\"label\">Request ID</td><td>{{ $json[\"Request ID\"] }}</td></tr>\n<tr><td class=\"label\">Customer Name</td><td>{{ $json[\"Customer Name\"] }}</td></tr>\n<tr><td class=\"label\">Customer Email</td><td>{{ $json[\"Customer Email\"] }}</td></tr>\n<tr><td class=\"label\">Company</td><td>{{ $json[\"Company\"] }}</td></tr>\n<tr><td class=\"label\">Request Type</td><td>{{ $json[\"Request Type\"] }}</td></tr>\n<tr><td class=\"label\">Manager Decision</td><td><span class=\"badge\">{{ $json[\"Manager Decision\"] }}</span></td></tr>\n</table>\n</div>\n\n<div class=\"card\"><h2>Sales Summary</h2><p>{{ $json[\"Sales Summary\"] }}</p></div>\n<div class=\"card\"><h2>HR Summary</h2><p>{{ $json[\"HR Summary\"] }}</p></div>\n<div class=\"card\"><h2>Support Summary</h2><p>{{ $json[\"Support Summary\"] }}</p></div>\n<div class=\"card\"><h2>Finance Summary</h2><p>{{ $json[\"Finance Summary\"] }}</p></div>\n\n<div class=\"card\">\n<h2>CEO Decision</h2>\n<table>\n<tr><td class=\"label\">Decision</td><td>{{ $json[\"CEO Decision\"] }}</td></tr>\n<tr><td class=\"label\">Business Priority</td><td>{{ $json[\"Business Priority\"] }}</td></tr>\n<tr><td class=\"label\">Decision Confidence</td><td>{{ $json[\"Decision Confidence\"] }}%</td></tr>\n<tr><td class=\"label\">Workflow Status</td><td>{{ $json[\"Workflow Status\"] }}</td></tr>\n<tr><td class=\"label\">Created At</td><td>{{ $json[\"Created At\"] }}</td></tr>\n</table>\n</div>\n\n<div style=\"text-align:center\">\n<a class=\"btn green\" href=\"{{ $execution.resumeUrl }}&decision=approved\">APPROVE</a>\n<a class=\"btn red\" href=\"{{ $execution.resumeUrl }}&decision=rejected\">REJECT</a>\n</div>\n</div>\n<div class=\"footer\">\nEnterprise AI Business Operating System<br>\nGenerated automatically by n8n\n</div>\n</div>\n</body></html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        4064,
+        1584
+      ],
+      "id": "9c12c41c-b462-4d84-9ce8-a8ebcf5fb110",
+      "name": "42 - Manager Approval Email",
+      "webhookId": "a98cf817-9747-4f96-a0b8-a0d59eb6204f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jg5eu1XTkziU7TlX",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4288,
+        1584
+      ],
+      "id": "079e7798-91e3-436c-a67b-eb4e96f0b40e",
+      "name": "43 - Wait for Approval",
+      "webhookId": "b416eebd-e0e3-4bbc-b6d9-462247a58c63",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac587ef4-f843-4bab-8c5f-54fa0215f530",
+              "leftValue": "={{ $json.query.decision }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4512,
+        1584
+      ],
+      "id": "1c513272-712e-4193-be14-b5b5dadd5e92",
+      "name": "44 - IF Approval Decision"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E",
+          "mode": "list",
+          "cachedResultName": "AI Lead CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 396801935,
+          "mode": "list",
+          "cachedResultName": "Sheet4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E/edit#gid=396801935"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Request ID": "={{ $('41 - CRM Logger').item.json['Request ID'] }}",
+            "Workflow Status": "Approved",
+            "Decision Time": "={{ $now }}",
+            "Human Decision": "Approved"
+          },
+          "matchingColumns": [
+            "Request ID"
+          ],
+          "schema": [
+            {
+              "id": "Request ID",
+              "displayName": "Request ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Request Type",
+              "displayName": "Request Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Manager Decision",
+              "displayName": "Manager Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sales Summary",
+              "displayName": "Sales Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HR Summary",
+              "displayName": "HR Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Summary",
+              "displayName": "Support Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finance Summary",
+              "displayName": "Finance Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEO Decision",
+              "displayName": "CEO Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Business Priority",
+              "displayName": "Business Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decision Confidence",
+              "displayName": "Decision Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Status",
+              "displayName": "Workflow Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Human Decision",
+              "displayName": "Human Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Decision Time",
+              "displayName": "Decision Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4736,
+        1488
+      ],
+      "id": "55913b4c-7677-4143-bd3f-420707a5f02f",
+      "name": "45 - Google Sheets (Update Row)",
+      "credentials": {
+        "googleApi": {
+          "id": "jPxT6sAWdI8lTXyL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "faiziyakhanwork@gmail.com",
+        "subject": "🎉 Your AI Automation Project Has Been Approved",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<style>\nbody{\nfont-family:Arial,sans-serif;\nbackground:#f4f7fb;\npadding:30px;\ncolor:#333;\n}\n.container{\nmax-width:700px;\nmargin:auto;\nbackground:#ffffff;\nborder-radius:12px;\noverflow:hidden;\nbox-shadow:0 5px 20px rgba(0,0,0,.12);\n}\n.header{\nbackground:#16a34a;\ncolor:white;\npadding:30px;\ntext-align:center;\n}\n.content{\npadding:35px;\nline-height:1.8;\n}\n.info{\nbackground:#f8fafc;\npadding:20px;\nborder-radius:10px;\nmargin:25px 0;\nborder-left:5px solid #16a34a;\n}\n.badge{\ndisplay:inline-block;\nbackground:#16a34a;\ncolor:white;\npadding:8px 16px;\nborder-radius:20px;\nfont-weight:bold;\n}\n.footer{\nbackground:#f3f4f6;\npadding:20px;\ntext-align:center;\nfont-size:13px;\ncolor:#666;\n}\nul{\npadding-left:20px;\n}\n</style>\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<div class=\"header\">\n<h1>✅ Project Approved</h1>\n<p>Enterprise AI Business Operating System</p>\n</div>\n\n<div class=\"content\">\n\n<h2>Hello {{$json.customer_name}},</h2>\n\n<p>\nWe are pleased to inform you that your Enterprise AI Automation proposal has been successfully reviewed and approved by our executive decision system.\n</p>\n\n<div class=\"info\">\n\n<p><b>Company</b><br>\n{{$json.customer_company}}</p>\n\n<p><b>Project</b><br>\n{{$json.request_type}}</p>\n\n<p><b>Status</b><br>\n<span class=\"badge\">APPROVED</span></p>\n\n<p><b>Executive Decision</b><br>\n{{$json.executive_decision}}</p>\n\n<p><b>Business Priority</b><br>\n{{$json.business_priority}}</p>\n\n<p><b>Decision Confidence</b><br>\n{{$json.decision_confidence}}%</p>\n\n</div>\n\n<h3>Next Steps</h3>\n\n<ul>\n<li>✔ Discovery Call Scheduling</li>\n<li>✔ Technical Requirement Gathering</li>\n<li>✔ Enterprise Solution Architecture</li>\n<li>✔ Commercial Proposal & Pricing</li>\n<li>✔ Implementation Roadmap</li>\n<li>✔ Project Kick-off</li>\n</ul>\n\n<p>\nOur Enterprise Solutions Team will contact you shortly to begin the implementation process.\n</p>\n\n<p>\nThank you for choosing our AI Automation Services.\n</p>\n\n<p>\nRegards,<br>\n<b>Enterprise AI Automation Team</b>\n</p>\n\n</div>\n\n<div class=\"footer\">\nEnterprise AI Business Operating System<br>\nPowered by n8n + Gemini AI\n</div>\n\n</div>\n\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        4960,
+        1488
+      ],
+      "id": "12e586e7-7296-4475-b4f2-53416f4da7ac",
+      "name": "46 - Gmail (Approval Email)",
+      "webhookId": "c26bb25c-3d14-4078-bd9f-fce6c5272105",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jg5eu1XTkziU7TlX",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E",
+          "mode": "list",
+          "cachedResultName": "AI Lead CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 396801935,
+          "mode": "list",
+          "cachedResultName": "Sheet4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BU57BKFlLW_R8TlxOUb5iEq8I7vIxODQMC-fFlp3p4E/edit#gid=396801935"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Request ID": "={{ $json[\"Request ID\"] }}",
+            "Workflow Status": "Rejected",
+            "Human Decision": "Rejected",
+            "Decision Time": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "Request ID"
+          ],
+          "schema": [
+            {
+              "id": "Request ID",
+              "displayName": "Request ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Request Type",
+              "displayName": "Request Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Manager Decision",
+              "displayName": "Manager Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sales Summary",
+              "displayName": "Sales Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HR Summary",
+              "displayName": "HR Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Summary",
+              "displayName": "Support Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finance Summary",
+              "displayName": "Finance Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEO Decision",
+              "displayName": "CEO Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Business Priority",
+              "displayName": "Business Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decision Confidence",
+              "displayName": "Decision Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Status",
+              "displayName": "Workflow Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Human Decision",
+              "displayName": "Human Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decision Time",
+              "displayName": "Decision Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4736,
+        1680
+      ],
+      "id": "ee3730ad-f521-4ae0-83aa-b7d66f76aa78",
+      "name": "47 - CRM Update (Rejected)",
+      "credentials": {
+        "googleApi": {
+          "id": "jPxT6sAWdI8lTXyL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "faiziyakhanwork@gmail.com",
+        "subject": "Update on Your Enterprise AI Automation Request",
+        "message": "=<!DOCTYPE html> <html> <head> <meta charset=\"UTF-8\"> <style>  body{ font-family:Arial,sans-serif; background:#f4f7fb; padding:30px; color:#333; }  .container{ max-width:700px; margin:auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,.12); }  .header{ background:#dc2626; color:white; padding:30px; text-align:center; }  .content{ padding:35px; line-height:1.8; }  .info{ background:#fff7f7; padding:20px; border-radius:10px; margin:25px 0; border-left:5px solid #dc2626; }  .badge{ display:inline-block; background:#dc2626; color:white; padding:8px 16px; border-radius:20px; font-weight:bold; }  .footer{ background:#f3f4f6; padding:20px; text-align:center; font-size:13px; color:#666; }  ul{ padding-left:20px; }  </style> </head>  <body>  <div class=\"container\">  <div class=\"header\"> <h1>Request Status Update</h1> <p>Enterprise AI Business Operating System</p> </div>  <div class=\"content\">  <h2>Hello {{$json.customer_name}},</h2>  <p> Thank you for submitting your Enterprise AI Automation request. Our executive review team has completed the evaluation of your proposal. </p>  <div class=\"info\">  <p><b>Company</b><br> {{$json.customer_company}}</p>  <p><b>Project</b><br> {{$json.request_type}}</p>  <p><b>Status</b><br> <span class=\"badge\">NOT APPROVED</span></p>  <p> After reviewing the current business requirements, we have decided not to move forward with this request at this time. </p>  </div>  <h3>Possible Reasons</h3>  <ul> <li>Current project priorities do not align with implementation goals.</li> <li>Additional business requirements may be needed.</li> <li>Budget or project scope requires further clarification.</li> <li>The requested solution may need refinement before implementation.</li> </ul>  <h3>What's Next?</h3>  <p> You are welcome to submit an updated proposal in the future. Our consulting team will be happy to review a revised request with additional requirements or business objectives. </p>  <p> Thank you for considering our Enterprise AI Automation Services. We appreciate your interest and hope to work with you in the future. </p>  <p>  Regards,<br> <b>Enterprise AI Automation Team</b>  </p>  </div>  <div class=\"footer\">  Enterprise AI Business Operating System<br> Powered by n8n + Gemini AI  </div>  </div>  </body> </html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        4960,
+        1680
+      ],
+      "id": "ca5d36fb-1cdb-4e05-993c-1f784904ee6d",
+      "name": "48 - Gmail (Rejection Email)",
+      "webhookId": "87f61971-57c2-4130-95a0-2b549870151a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jg5eu1XTkziU7TlX",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5200,
+        1568
+      ],
+      "id": "4a2f09ce-cc73-4597-971d-af08e35ef8e7",
+      "name": "49 - Merge Approval Result"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 - Webhook": {
+      "main": [
+        [
+          {
+            "node": "02 - Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "03 - Build Enterprise Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Build Enterprise Context": {
+      "main": [
+        [
+          {
+            "node": "04 - Manager Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Manager Input": {
+      "main": [
+        [
+          {
+            "node": "05 - Manager AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 - Manager Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "05 - Manager AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 - Manager Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "05 - Manager AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "07 - Manager Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Manager AI Agent": {
+      "main": [
+        [
+          {
+            "node": "08 - Agent Router Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 - Agent Router Context": {
+      "main": [
+        [
+          {
+            "node": "09 - Split Selected Agents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 - Split Selected Agents": {
+      "main": [
+        [
+          {
+            "node": "10 - Agent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Agent Router": {
+      "main": [
+        [
+          {
+            "node": "11 - Sales Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "16 - HR Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "26 - Finance Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "21 - Customer Support Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Sales Input": {
+      "main": [
+        [
+          {
+            "node": "12 - Sales AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Sales Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "12 - Sales AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Sales Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "12 - Sales AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Sales AI Agent": {
+      "main": [
+        [
+          {
+            "node": "15 - Sales Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - Sales Context": {
+      "main": [
+        [
+          {
+            "node": "31 - Merge Department Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - HR Input": {
+      "main": [
+        [
+          {
+            "node": "17 - HR AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 - HR Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "17 - HR AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19 - HR Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "17 - HR AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - HR AI Agent": {
+      "main": [
+        [
+          {
+            "node": "20 - HR Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "21 - Customer Support Input": {
+      "main": [
+        [
+          {
+            "node": "22 - Customer Support AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "23 - Customer Support Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "22 - Customer Support AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24 - Customer Support Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "22 - Customer Support AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "22 - Customer Support AI Agent": {
+      "main": [
+        [
+          {
+            "node": "25 - Customer Support Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "26 - Finance Input": {
+      "main": [
+        [
+          {
+            "node": "27 - Finance AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "28 - Finance Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "27 - Finance AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "29 - Finance Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "27 - Finance AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "27 - Finance AI Agent": {
+      "main": [
+        [
+          {
+            "node": "30 - Finance Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "25 - Customer Support Context": {
+      "main": [
+        [
+          {
+            "node": "31 - Merge Department Results",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "20 - HR Context": {
+      "main": [
+        [
+          {
+            "node": "31 - Merge Department Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "30 - Finance Context": {
+      "main": [
+        [
+          {
+            "node": "31 - Merge Department Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "31 - Merge Department Results": {
+      "main": [
+        [
+          {
+            "node": "32 - Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "33 - Reporting Input": {
+      "main": [
+        [
+          {
+            "node": "34 - Reporting AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "32 - Aggregate Results": {
+      "main": [
+        [
+          {
+            "node": "33 - Reporting Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "35 - Reporting Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "34 - Reporting AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "36 - Reporting Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "34 - Reporting AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "34 - Reporting AI Agent": {
+      "main": [
+        [
+          {
+            "node": "37 - CEO Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "37 - CEO Input": {
+      "main": [
+        [
+          {
+            "node": "38 - CEO AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "39 - CEO Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "38 - CEO AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "40 - CEO Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "38 - CEO AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "38 - CEO AI Agent": {
+      "main": [
+        [
+          {
+            "node": "41 - CRM Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "41 - CRM Logger": {
+      "main": [
+        [
+          {
+            "node": "42 - Manager Approval Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "42 - Manager Approval Email": {
+      "main": [
+        [
+          {
+            "node": "43 - Wait for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "43 - Wait for Approval": {
+      "main": [
+        [
+          {
+            "node": "44 - IF Approval Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "44 - IF Approval Decision": {
+      "main": [
+        [
+          {
+            "node": "45 - Google Sheets (Update Row)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "47 - CRM Update (Rejected)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "45 - Google Sheets (Update Row)": {
+      "main": [
+        [
+          {
+            "node": "46 - Gmail (Approval Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "47 - CRM Update (Rejected)": {
+      "main": [
+        [
+          {
+            "node": "48 - Gmail (Rejection Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "46 - Gmail (Approval Email)": {
+      "main": [
+        [
+          {
+            "node": "49 - Merge Approval Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "48 - Gmail (Rejection Email)": {
+      "main": [
+        [
+          {
+            "node": "49 - Merge Approval Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "49 - Merge Approval Result": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e7cdcd05-491d-4244-9ecf-d3316e02d96a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eb197799cbd0c2dc65911762932d57237c992fd519412d907f25906c0f0e8384"
+  },
+  "nodeGroups": [],
+  "id": "wn10E4VHpiDWCN6Z",
+  "tags": []
+}
