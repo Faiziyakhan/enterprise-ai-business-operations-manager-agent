@@ -120,7 +120,7 @@ The system assigns an operational tracking execution ID (`request_id`) and times
 
 ## Evidence & Verified Visual Proof
 
-This repository contains verified captures from the active self-hosted n8n environment and live CRM synchronization:
+This repository contains verified captures from the active self-hosted n8n environment, CRM synchronization, and live communication flows:
 
 ### 1. Multi-Agent Workflow Canvas & Architecture
 | Full Workflow Canvas (49 Nodes) | End-to-End Orchestration Flow |
@@ -132,12 +132,15 @@ This repository contains verified captures from the active self-hosted n8n envir
 | :---: |
 | ![Departmental AI Agent Stack](Screenshot%202026-10-11%20222001.png) |
 
-### 3. Google Sheets Multi-Department CRM Database
+### 3. Centralized Google Sheets CRM Database
 | Centralized CRM Ledger & Human Decision Audit Log |
 | :---: |
 | ![CRM Ledger](Screenshot%202026-10-09%20234728.png) |
 
-
+### 4. Human-in-the-Loop Governance & Client Notification Loop
+| Manager Interactive Review Email (Approve / Reject Action) | Dispatched Client Confirmation (Project Approved) |
+| :---: | :---: |
+| ![Manager Review Email](Screenshot%202026-09-16%20005002.png) | ![Client Confirmation Email](Screenshot%202026-09-16%20003939.png) |
 ---
 
 ## Data & Demo Notice
@@ -161,7 +164,6 @@ API keys, OAuth credentials, service account tokens, and webhook IDs are sanitiz
 ## Author
 
 **Faiziya Khan**
-
 AI Automation Engineer | n8n | AI Agents | RAG | Workflow Automation
 
-Email: khanfaiziya2@gmail.com
+📧 Email: khanfaiziya2@gmail.com
